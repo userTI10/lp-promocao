@@ -1,21 +1,21 @@
-// app/api/check-horario/route.js
+// check-horario.ts
 import { NextResponse } from 'next/server';
-import { getConnection } from '../conn/dbsever'; // ajuste o caminho conforme seu projeto
+import { getData } from '../conn/neon';
 
 export async function GET() {
-  try {
-    const pool = await getConnection();
+  let client;
 
-    const result = await pool.request().query(`
-      SELECT escolhahorario, COUNT(*) as total
-      FROM promocao
-      GROUP BY escolhahorario
-      HAVING COUNT(*) >= 50
+  try {
+    client = await getData();
+
+    const result = await client.query(`
+      SELECT escolhahorario, COUNT(*) as total 
+      FROM promocao 
+      GROUP BY escolhahorario 
+      HAVING COUNT(*) >= 2
     `);
 
-    const rows = result.recordset;
-
-    if (!rows || rows.length === 0) {
+    if (!result.rows || result.rows.length === 0) {
       return NextResponse.json({
         success: true,
         message: 'Nenhum horário encontrado',
@@ -25,14 +25,14 @@ export async function GET() {
     }
 
     const horariosOcupados = {};
-    rows.forEach(row => {
+    result.rows.forEach(row => {
       horariosOcupados[row.escolhahorario] = parseInt(row.total);
     });
 
     return NextResponse.json({
       success: true,
       horariosOcupados,
-      horariosDesabilitados: rows.map(row => row.escolhahorario)
+      horariosDesabilitados: result.rows.map(row => row.escolhahorario)
     });
 
   } catch (error) {
@@ -41,5 +41,7 @@ export async function GET() {
       success: false,
       error: `Erro ao verificar horários: ${error.message}`
     }, { status: 500 });
+
   }
+  
 }

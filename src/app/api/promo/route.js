@@ -1,51 +1,43 @@
 "use server";
 import { NextResponse } from 'next/server';
-import { getData } from '../conn/neon';
-
+import { getConnection } from '../conn/dbsever';
 
 export async function POST(request) {
-  
   try {
-    const client = await getData();
     const formData = await request.json();
-    
-    const values = [
-      formData.nome || '',
-      formData.cpf || '',
-      formData.email || '',
-      formData.ddd || '',
-      formData.celular || '',
-      formData.estado || '',
-      formData.cidade || '',
-      formData.data || new Date().toISOString(),
-      formData.aceitaTermos || false,
-      formData.cupom || '',
-      formData.escolhahorario || '',
-      formData.clienteTouti || 'não',
-      formData.saurus || '',
-      formData.endereco || ''
-    ];
+    const pool = await getConnection();
 
-    const query = `
-      INSERT INTO promocao (
-        nome, cpf, email, ddd, celular, uf, cidade, dtdata, 
-        aceito_termos, cupom, escolhahorario, clienteTouti, saurus, endereco
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
-      RETURNING *
-    `;
+    const result = await pool.request()
+      .input('nome', formData.nome)
+      .input('cpf', formData.cpf)
+      .input('email', formData.email)
+      .input('ddd', formData.ddd)
+      .input('celular', formData.celular)
+      .input('uf', formData.estado)
+      .input('cidade', formData.cidade)
+      .input('dtdata', formData.data)
+      .input('aceito_termos', formData.aceitaTermos ? 1 : 0)
+      .input('cupom', formData.cupom)
+      .input('escolhahorario', formData.escolhahorario)
+      .input('clientetouti', formData.clienteTouti === 'sim' ? 'sim' : 'não')
+      .input('saurus', formData.saurus)
+      .input('endereco', formData.endereco)
+      .query(`
+        INSERT INTO promocao (
+          nome, cpf, email, ddd, celular, uf, cidade, dtdata, 
+          aceito_termos, cupom, escolhahorario, clientetouti, saurus, endereco
+        ) VALUES (
+          @nome, @cpf, @email, @ddd, @celular, @uf, @cidade, @dtdata, 
+          @aceito_termos, @cupom, @escolhahorario, @clientetouti, @saurus, @endereco
+        )
+      `);
 
-    const result = await client.query(query, values);
-    
-    return NextResponse.json({ 
-      success: true, 
-      data: result.rows[0] 
-    });
-
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Erro no cadastro:', error);
     return NextResponse.json(
       { success: false, error: 'Erro ao cadastrar usuário' },
       { status: 500 }
     );
-  } 
+  }
 }
