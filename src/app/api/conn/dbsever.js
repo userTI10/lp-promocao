@@ -2,11 +2,11 @@
 const sql = require('mssql')
 
 const config = {
-  user: process.env.dbuser,
-  password: process.env.dbpass,
-  server: process.env.dbserver, 
-  port:process.env.dbport,
-  database: process.env.dbbase,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASS,
+  server: process.env.DB_SERVER, 
+  port:process.env.DB_PORT,
+  database: process.env.DB_BASE,
   options: {
     encrypt: false, // true se for Azure
     trustServerCertificate: true,
