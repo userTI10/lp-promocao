@@ -1,12 +1,11 @@
-"use server";
 const sql = require('mssql')
 
 const config = {
-  user: process.env.DB_USER,
-  password: process.env.DB_PASS,
-  server: process.env.DB_SERVER, 
-  port:process.env.DB_PORT,
-  database: process.env.DB_BASE,
+  user: 'rubens.pereira',
+  password: 'Touti#2025',
+  server: '191.234.202.14', // ou IP]
+  port:14333,
+  database: 'promocao_amostra',
   options: {
     encrypt: false, // true se for Azure
     trustServerCertificate: true,
