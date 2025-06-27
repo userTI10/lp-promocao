@@ -1,28 +1,46 @@
-import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
 import { EmailTemplate } from '@/Components/EmailTemplate';
 
-const resend = new Resend('re_3YqJBhDG_83Bt9hxa6DySDRt8J95fFGxm');
-
 export async function POST(request) {
-  try {
-    const formData = await request.json();
-    if (!formData.email || !/\S+@\S+\.\S+/.test(formData.email)) {
-      return Response.json({ error: 'Email inválido' }, { status: 400 });
-    }
+  const { nome, email, escolhahorario, cupom, endereco, cidade, cpf } = await request.json();
 
-    const { data, error } = await resend.emails.send({
-      from: 'Touti <no-reply@touti.com.br>',
-      to: formData.email,
-      subject: 'Bem-vindo!',
-      html: EmailTemplate(formData),
+  const transporter = nodemailer.createTransport({
+  host: 'cloud21.mailgrid.net.br',
+  port: 587,
+  secure: false,
+  auth: {
+    user: 'smtp1@touticosmetics.com.br',
+    pass: 'ddas37wn2b42x',
+  }
+});
+
+  const htmlContent = EmailTemplate({
+    nome,
+    email,
+    escolhahorario,
+    cupom,
+    endereco,
+    cidade,
+    cpf
+  });
+
+  try {
+    await transporter.sendMail({
+      from: '"Touti" <no-reply@touticosmetics.com.br>',
+      to: email,
+      subject: 'Confirmação de Cadastro - Brinde Touti',
+      html: htmlContent,
     });
 
-    if (error) {
-      return Response.json({ error }, { status: 500 });
-    }
-
-    return Response.json({ success: true }, { status: 200 });
-  } catch (error) {
-    return Response.json({ error: 'Erro ao enviar email' }, { status: 500 });
+    return new Response(JSON.stringify({ success: true }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  } catch (err) {
+    console.error(err);
+    return new Response(JSON.stringify({ error: 'Erro ao enviar email' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 }
